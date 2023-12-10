@@ -21,6 +21,12 @@
     pic->height = height;
     return true;
   }
+  
+  void overwrite_picture(struct picture *pic1, struct picture *pic2){
+    pic1->img = pic2->img;
+    pic1->width = pic2->width;
+    pic1->height = pic2->height;
+  }
 
   bool save_picture_to_file(struct picture *pic, const char *path){
     return save_image(pic->img, path);   

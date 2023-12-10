@@ -104,6 +104,7 @@
     // IO error check
     if(cmd_no == no_of_cmds){
       printf("[!] invalid process requested: %s is not defined\n    aborting...\n", process);  
+      clear_picture(&pic);
       exit(IO_ERROR);   
     }
   

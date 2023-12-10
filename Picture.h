@@ -25,6 +25,9 @@
 
   // initialise picture struct of the specified size 
   bool init_picture_from_size(struct picture *pic, int width, int height); 
+  
+  // overwrites the stored image in pic1 with the stored image in pic2
+  void overwrite_picture(struct picture *pic1, struct picture *pic2);
 
   // save picture to specified file
   bool save_picture_to_file(struct picture *pic, const char *path);

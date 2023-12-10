@@ -104,11 +104,16 @@ else
     run_test("repeated blur test #{blur_cnt}", "need_glasses#{blur_cnt-1}.jpg need_glasses#{blur_cnt}.jpg blur", "need_glasses#{blur_cnt}.jpeg")  
   end
   
+  puts "----------------------------------------"
+  puts "        Parallel Blur Test Cases        " 
+  puts "----------------------------------------"
+  puts ""    
+  
   run_test("parallel blur test 1", "test_images/test.jpg par-test_blur.jpg parallel-blur", "test_blur.jpeg")
   run_test("parallel blur test 2", "test_images/dip.jpg par-blip.jpg parallel-blur", "blip.jpeg")
-  run_test("repeated blur test 1", "test_images/ducks2.jpg par-need_glasses1.jpg parallel-blur", "need_glasses1.jpeg")
+  run_test("repeated parallel blur test 1", "test_images/ducks2.jpg par-need_glasses1.jpg parallel-blur", "need_glasses1.jpeg")
   for blur_cnt in 2..10
-    run_test("repeated blur test #{blur_cnt}", "par-need_glasses#{blur_cnt-1}.jpg par-need_glasses#{blur_cnt}.jpg parallel-blur", "need_glasses#{blur_cnt}.jpeg")  
+    run_test("repeated parallel blur test #{blur_cnt}", "par-need_glasses#{blur_cnt-1}.jpg par-need_glasses#{blur_cnt}.jpg parallel-blur", "need_glasses#{blur_cnt}.jpeg")  
   end
   
   puts "----------------------------------------"
