@@ -7,9 +7,9 @@
 
 // ---------- MAIN PROGRAM ---------- \\
 
-  int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
 
-    printf("Support Code for Running the Blur Optimisation Experiments... \n");
-    //TODO: implement your blur optimisation experiments in this file
-
-  }
+  printf("Support Code for Running the Blur Optimisation Experiments... \n");
+  // TODO: implement your blur optimisation experiments in this file
+}

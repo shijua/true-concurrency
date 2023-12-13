@@ -8,9 +8,9 @@
 
 // ---------- MAIN PROGRAM ---------- \\
 
-  int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
 
-    printf("Running the Interactive C Picture Processing Library... \n");
-    //TODO: implement the interactive command-line interpreter for the Optional Extension
-
-  }
+  printf("Running the Interactive C Picture Processing Library... \n");
+  // TODO: implement the interactive command-line interpreter for the Optional Extension
+}
