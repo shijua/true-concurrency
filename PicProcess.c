@@ -1,7 +1,17 @@
 #include "PicProcess.h"
+#include <pthread.h>
+#include <unistd.h>
 
 #define NO_RGB_COMPONENTS 3
 #define BLUR_REGION_SIZE 9
+#define THREAD_NUM 3000
+struct task_args
+{
+  int i;
+  int j;
+  struct picture *input;
+  struct picture *output;
+};
 
 void invert_picture(struct picture *pic)
 {
@@ -185,23 +195,111 @@ void blur_picture(struct picture *pic)
   overwrite_picture(pic, &tmp);
 }
 
+pthread_mutex_t lock;
+// record the number of threads running
+int count = 0;
+void *help_blur(struct task_args *args)
+{
+
+  int i = args->i;
+  int j = args->j;
+  struct picture *input = args->input;
+  struct picture *output = args->output;
+  pthread_mutex_lock(&lock);
+  int width = input->width;
+  int height = input->height;
+  // set-up a local pixel on the stack
+  struct pixel rgb = get_pixel(input, i, j);
+  count++;
+  pthread_mutex_unlock(&lock);
+
+  // don't need to modify boundary pixels
+  if (i != 0 && j != 0 && i != width - 1 && j != height - 1)
+  {
+
+    // set up running RGB component totals for pixel region
+    int sum_red = rgb.red;
+    int sum_green = rgb.green;
+    int sum_blue = rgb.blue;
+
+    // check the surrounding pixel region
+    for (int n = -1; n <= 1; n++)
+    {
+      for (int m = -1; m <= 1; m++)
+      {
+        if (n != 0 || m != 0)
+        {
+          pthread_mutex_lock(&lock);
+          rgb = get_pixel(input, i + n, j + m);
+          pthread_mutex_unlock(&lock);
+          sum_red += rgb.red;
+          sum_green += rgb.green;
+          sum_blue += rgb.blue;
+        }
+      }
+    }
+
+    // compute average pixel RGB value
+    rgb.red = sum_red / BLUR_REGION_SIZE;
+    rgb.green = sum_green / BLUR_REGION_SIZE;
+    rgb.blue = sum_blue / BLUR_REGION_SIZE;
+  }
+
+  // set pixel to computed region RBG value (unmodified if boundary)
+  pthread_mutex_lock(&lock);
+  set_pixel(output, i, j, &rgb);
+  count--;
+  pthread_mutex_unlock(&lock);
+  free(args);
+  pthread_exit(NULL);
+}
+
 void parallel_blur_picture(struct picture *pic)
 {
   // make new temporary picture to work in
   struct picture tmp;
   init_picture_from_size(&tmp, pic->width, pic->height);
-
+  int height = tmp.height;
+  int width = tmp.width;
+  int num_threads = width * height;
+  pthread_t threads[num_threads];
   // iterate over each pixel in the picture
-  for (int i = 0; i < tmp.width; i++)
+  printf("creating threads\n");
+  pthread_mutex_init(&lock, NULL);
+  int pre = 0;
+  for (int k = 0; k < num_threads; k++)
   {
-    for (int j = 0; j < tmp.height; j++)
+    // waiting for threads to finish
+    if (k % THREAD_NUM == 0)
     {
-
-      // TODO: set-up work and dispatch to a pthread
+      pthread_mutex_unlock(&lock);
+      // 0.5s
+      // usleep(500000);
+      for (int i = pre; i < k; i++)
+      {
+        pthread_join(threads[i], NULL);
+      }
+      pre = k;
     }
+    // lock will only release when waiting for threads
+    pthread_mutex_trylock(&lock);
+    struct task_args *args = malloc(sizeof(struct task_args));
+    args->i = k / height;
+    args->j = k % height;
+    args->input = pic;
+    args->output = &tmp;
+    pthread_create(&threads[k], NULL, (void *(*)(void *))help_blur, args);
+    //    pthread_mutex_unlock(&lock);
   }
-
+  pthread_mutex_unlock(&lock);
+  //  printf("waiting for threads to finish\n");
+  for (int i = pre; i < num_threads; i++)
+  {
+    pthread_join(threads[i], NULL);
+  }
+  //  printf("done\n");
   // clean-up the old picture and replace with new picture
   clear_picture(pic);
   overwrite_picture(pic, &tmp);
+  pthread_mutex_destroy(&lock);
 }
