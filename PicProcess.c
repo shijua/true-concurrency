@@ -5,7 +5,7 @@
 
 #define NO_RGB_COMPONENTS 3
 #define BLUR_REGION_SIZE 9
-#define THREAD_NUM 3000
+#define NUM_THREADS 16
 struct task_args
 {
   int i;
@@ -224,7 +224,7 @@ void parallel_blur_picture(struct picture *pic)
   int height = tmp.height;
   int width = tmp.width;
   // iterate over each pixel in the picture
-  threadpool thpool = thpool_init(16);
+  threadpool thpool = thpool_init(NUM_THREADS);
 
   for (int i = 0; i < width; i++)
   {

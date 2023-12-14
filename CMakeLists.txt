@@ -15,12 +15,14 @@ add_executable(SeqMain
         Utils.c Utils.h
 #        Compare.c
         sod_118/sod.c sod_118/sod.h
-        pool/thpool.c pool/thpool.h
+        thpool.c thpool.h
         Picture.c Picture.h)
 target_compile_options(SeqMain PRIVATE -DMAIN)
 
-#add_executable(test
-#        test.c
-#        laser.c laser.h
-#        SeqMain.c)
-#target_compile_options(test PRIVATE -DTEST)
+add_executable(Experiment
+        BlurExprmt.c
+        Utils.c Utils.h
+        thpool.c thpool.h
+        sod_118/sod.c sod_118/sod.h
+        Picture.c Picture.h)
+target_compile_options(Experiment PRIVATE -DTEST)
