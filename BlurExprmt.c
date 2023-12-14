@@ -295,7 +295,7 @@ char *names[] = {
 
 /* functions for sector test */
 // value of sector size
-int sector_sizes[] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+int sector_sizes[] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
 // names for output message and file
 char *sector_names[] = {
     "sector_2",
@@ -308,8 +308,7 @@ char *sector_names[] = {
     "sector_256",
     "sector_512",
     "sector_1024",
-    "sector_2048",
-    "sector_4096"};
+    "sector_2048"};
 
 // image will be compared with sequential version
 void img_cmp(char *name)
