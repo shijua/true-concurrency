@@ -251,7 +251,7 @@ void sector_blur_picture(struct picture *pic, int sector_size)
     for (int j = 0; j < height; j += sector_size)
     {
 
-      struct sector_args *args = malloc(sizeof(struct task_args));
+      struct sector_args *args = malloc(sizeof(struct sector_args));
       args->i = i;
       args->j = j;
       args->input = pic;
@@ -389,6 +389,7 @@ int main(int argc, char **argv)
     printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
     // comparing output image with sequential version
     img_cmp(out);
+    clear_picture(&pic);
   }
 
   // run each picture transformation function with different sector sizes
@@ -409,6 +410,7 @@ int main(int argc, char **argv)
     adjust_time(&start, &end);
     printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
     img_cmp(out);
+    clear_picture(&pic);
   }
 
   // choose a optimal image
