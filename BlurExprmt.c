@@ -3,10 +3,10 @@
 #include <pthread.h>
 #include "Utils.h"
 #include "Picture.h"
-// #include "PicProcess.h"
 #include "time.h"
 #include "thpool.h"
 
+/* ---------- definitions ---------- */
 #define NO_RGB_COMPONENTS 3
 #define BLUR_REGION_SIZE 9
 #define BILLION 1000000000.0
@@ -30,7 +30,7 @@ struct sector_args
 
 /* ---------- picture transformation functions ---------- */
 
-// helper function to calculate new pixel value for blur
+/* helper function to calculate new pixel value for blur */
 void calculate_new_blur_pixel(int i, int j, struct picture *input, struct picture *output)
 {
   // set-up a local pixel on the stack
@@ -111,12 +111,11 @@ void *help_column_blur(struct task_args *args)
 
 void column_blur_picture(struct picture *pic)
 {
-  // make new temporary picture to work in
   struct picture tmp;
   init_picture_from_size(&tmp, pic->width, pic->height);
   int height = tmp.height;
   int width = tmp.width;
-  // iterate over each pixel in the picture
+  // init a thread pool
   threadpool thpool = thpool_init(NUM_THREADS);
 
   for (int i = 0; i < width; i++)
@@ -127,6 +126,7 @@ void column_blur_picture(struct picture *pic)
     args->output = &tmp;
     thpool_add_work(thpool, (void (*)(void *))help_column_blur, args);
   }
+  // cleaning up
   thpool_wait(thpool);
   thpool_destroy(thpool);
   clear_picture(pic);
@@ -153,12 +153,10 @@ void *help_row_blur(struct task_args *args)
 
 void row_blur_picture(struct picture *pic)
 {
-  // make new temporary picture to work in
   struct picture tmp;
   init_picture_from_size(&tmp, pic->width, pic->height);
   int height = tmp.height;
   int width = tmp.width;
-  // iterate over each pixel in the picture
   threadpool thpool = thpool_init(NUM_THREADS);
 
   for (int j = 0; j < height; j++)
@@ -168,6 +166,47 @@ void row_blur_picture(struct picture *pic)
     args->input = pic;
     args->output = &tmp;
     thpool_add_work(thpool, (void (*)(void *))help_row_blur, args);
+  }
+  thpool_wait(thpool);
+  thpool_destroy(thpool);
+  clear_picture(pic);
+  overwrite_picture(pic, &tmp);
+}
+
+/* pixel by pixel version */
+// helper function runs by child for parallel blur
+void *help_parallel_blur(struct task_args *args)
+{
+  int i = args->i;
+  int j = args->j;
+  struct picture *input = args->input;
+  struct picture *output = args->output;
+
+  calculate_new_blur_pixel(i, j, input, output);
+
+  free(args);
+  return NULL;
+}
+
+void parallel_blur_picture(struct picture *pic)
+{
+  struct picture tmp;
+  init_picture_from_size(&tmp, pic->width, pic->height);
+  int height = tmp.height;
+  int width = tmp.width;
+  threadpool thpool = thpool_init(NUM_THREADS);
+
+  for (int i = 0; i < width; i++)
+  {
+    for (int j = 0; j < height; j++)
+    {
+      struct task_args *args = malloc(sizeof(struct task_args));
+      args->i = i;
+      args->j = j;
+      args->input = pic;
+      args->output = &tmp;
+      thpool_add_work(thpool, (void (*)(void *))help_parallel_blur, args);
+    }
   }
   thpool_wait(thpool);
   thpool_destroy(thpool);
@@ -189,7 +228,8 @@ void *help_sector_blur(struct sector_args *args)
   {
     for (int j = y; j < y + sector_size; j++)
     {
-      if (i >= 0 && i < output->width && j >= 0 && j < output->height) {
+      if (i >= 0 && i < output->width && j >= 0 && j < output->height)
+      {
         calculate_new_blur_pixel(i, j, input, output);
       }
     }
@@ -200,17 +240,15 @@ void *help_sector_blur(struct sector_args *args)
 
 void sector_blur_picture(struct picture *pic, int sector_size)
 {
-  // make new temporary picture to work in
   struct picture tmp;
   init_picture_from_size(&tmp, pic->width, pic->height);
   int height = tmp.height;
   int width = tmp.width;
-  // iterate over each pixel in the picture
   threadpool thpool = thpool_init(NUM_THREADS);
 
-  for (int i = 0; i < width; i+=sector_size)
+  for (int i = 0; i < width; i += sector_size)
   {
-    for (int j = 0; j < height; j+=sector_size)
+    for (int j = 0; j < height; j += sector_size)
     {
 
       struct sector_args *args = malloc(sizeof(struct task_args));
@@ -228,51 +266,7 @@ void sector_blur_picture(struct picture *pic, int sector_size)
   overwrite_picture(pic, &tmp);
 }
 
-
-/* pixel by pixel version */
-// helper function runs by child for parallel blur
-void *help_parallel_blur(struct task_args *args)
-{
-  int i = args->i;
-  int j = args->j;
-  struct picture *input = args->input;
-  struct picture *output = args->output;
-
-  calculate_new_blur_pixel(i, j, input, output);
-
-  free(args);
-  return NULL;
-}
-
-void parallel_blur_picture(struct picture *pic)
-{
-  // make new temporary picture to work in
-  struct picture tmp;
-  init_picture_from_size(&tmp, pic->width, pic->height);
-  int height = tmp.height;
-  int width = tmp.width;
-  // iterate over each pixel in the picture
-  threadpool thpool = thpool_init(NUM_THREADS);
-
-  for (int i = 0; i < width; i++)
-  {
-    for (int j = 0; j < height; j++)
-    {
-      struct task_args *args = malloc(sizeof(struct task_args));
-      args->i = i;
-      args->j = j;
-      args->input = pic;
-      args->output = &tmp;
-      thpool_add_work(thpool, (void (*)(void *))help_parallel_blur, args);
-    }
-  }
-  thpool_wait(thpool);
-  thpool_destroy(thpool);
-  clear_picture(pic);
-  overwrite_picture(pic, &tmp);
-}
-
-// // ---------- MAIN PROGRAM ---------- \\
+/* ---------- MAIN PROGRAM ---------- */
 
 void adjust_time(struct timespec *start, struct timespec *end)
 {
@@ -318,7 +312,8 @@ char *sector_names[] = {
     "sector_4096"};
 
 // image will be compared with sequential version
-void img_cmp(char *name) {
+void img_cmp(char *name)
+{
 
   // create provided image objects
   struct picture pic1;
@@ -369,20 +364,22 @@ void img_cmp(char *name) {
 int main(int argc, char **argv)
 {
 
-
   // define variables
   struct picture pic;
   struct timespec start, end;
 
   char *file_name = "images/test_large.jpg";
 
+  // run each picture transformation function except for sector blur
   for (int i = 0; i < sizeof(names) / sizeof(names[0]); i++)
   {
     printf("Running %s blur...\n", names[i]);
     clock_gettime(CLOCK_MONOTONIC, &start);
     init_picture_from_file(&pic, file_name);
-    for (int j = 0; j < 10; j++) {
-        cmds[i](&pic);
+    // run each function 10 times
+    for (int j = 0; j < 10; j++)
+    {
+      cmds[i](&pic);
     }
     char out[80];
     strcpy(out, names[i]);
@@ -391,15 +388,18 @@ int main(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     adjust_time(&start, &end);
     printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
+    // comparing output image with sequential version
     img_cmp(out);
   }
 
+  // run each picture transformation function with different sector sizes
   for (int i = 0; i < sizeof(sector_sizes) / sizeof(sector_sizes[0]); i++)
   {
     printf("Running %s blur...\n", sector_names[i]);
     clock_gettime(CLOCK_MONOTONIC, &start);
     init_picture_from_file(&pic, file_name);
-    for (int j = 0; j < 10; j++) {
+    for (int j = 0; j < 10; j++)
+    {
       sector_blur_picture(&pic, sector_sizes[i]);
     }
     char out[80];
