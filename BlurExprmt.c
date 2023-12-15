@@ -373,23 +373,28 @@ int main(int argc, char **argv)
   for (int i = 0; i < sizeof(names) / sizeof(names[0]); i++)
   {
     printf("Running %s blur...\n", names[i]);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    init_picture_from_file(&pic, file_name);
-    // run each function 10 times
-    for (int j = 0; j < 10; j++)
-    {
-      cmds[i](&pic);
+    double total = 0;
+    for (int k = 0; k < 3; k++) {
+      clock_gettime(CLOCK_MONOTONIC, &start);
+      init_picture_from_file(&pic, file_name);
+      // run each function 10 times
+      for (int j = 0; j < 10; j++)
+      {
+        cmds[i](&pic);
+      }
+      char out[80];
+      strcpy(out, names[i]);
+      strcat(out, ".jpg");
+      save_picture_to_file(&pic, out);
+      clock_gettime(CLOCK_MONOTONIC, &end);
+      adjust_time(&start, &end);
+      printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
+      total += end.tv_sec - start.tv_sec + (end.tv_nsec - start.tv_nsec) / BILLION;
+      // comparing output image with sequential version
+      img_cmp(out);
+      clear_picture(&pic);
     }
-    char out[80];
-    strcpy(out, names[i]);
-    strcat(out, ".jpg");
-    save_picture_to_file(&pic, out);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    adjust_time(&start, &end);
-    printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
-    // comparing output image with sequential version
-    img_cmp(out);
-    clear_picture(&pic);
+    printf("average time taken: %f\n", total / 3);
   }
 
   // run each picture transformation function with different sector sizes
@@ -398,19 +403,23 @@ int main(int argc, char **argv)
     printf("Running %s blur...\n", sector_names[i]);
     clock_gettime(CLOCK_MONOTONIC, &start);
     init_picture_from_file(&pic, file_name);
-    for (int j = 0; j < 10; j++)
-    {
-      sector_blur_picture(&pic, sector_sizes[i]);
+    double total = 0;
+    for (int k = 0; k < 3; k++) {
+      for (int j = 0; j < 10; j++)
+      {
+        sector_blur_picture(&pic, sector_sizes[i]);
+      }
+      char out[80];
+      strcpy(out, sector_names[i]);
+      strcat(out, ".jpg");
+      save_picture_to_file(&pic, out);
+      clock_gettime(CLOCK_MONOTONIC, &end);
+      adjust_time(&start, &end);
+      printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
+      total += end.tv_sec - start.tv_sec + (end.tv_nsec - start.tv_nsec) / BILLION;
+      img_cmp(out);
+      clear_picture(&pic);
     }
-    char out[80];
-    strcpy(out, sector_names[i]);
-    strcat(out, ".jpg");
-    save_picture_to_file(&pic, out);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    adjust_time(&start, &end);
-    printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
-    img_cmp(out);
-    clear_picture(&pic);
   }
 
   // choose a optimal image
