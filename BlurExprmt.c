@@ -375,24 +375,24 @@ int main(int argc, char **argv)
     printf("Running %s blur...\n", names[i]);
     double total = 0;
     for (int k = 0; k < 3; k++) {
-      clock_gettime(CLOCK_MONOTONIC, &start);
       init_picture_from_file(&pic, file_name);
+      clock_gettime(CLOCK_MONOTONIC, &start);
       // run each function 10 times
       for (int j = 0; j < 10; j++)
       {
         cmds[i](&pic);
       }
       char out[80];
+      clock_gettime(CLOCK_MONOTONIC, &end);
       strcpy(out, names[i]);
       strcat(out, ".jpg");
       save_picture_to_file(&pic, out);
-      clock_gettime(CLOCK_MONOTONIC, &end);
       adjust_time(&start, &end);
       printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
       total += end.tv_sec - start.tv_sec + (end.tv_nsec - start.tv_nsec) / BILLION;
       // comparing output image with sequential version
-      img_cmp(out);
       clear_picture(&pic);
+      img_cmp(out);
     }
     printf("----average time taken: %lf----\n", total / 3);
   }
@@ -401,24 +401,24 @@ int main(int argc, char **argv)
   for (int i = 0; i < sizeof(sector_sizes) / sizeof(sector_sizes[0]); i++)
   {
     printf("Running %s blur...\n", sector_names[i]);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    init_picture_from_file(&pic, file_name);
     double total = 0;
     for (int k = 0; k < 3; k++) {
+      init_picture_from_file(&pic, file_name);
+      clock_gettime(CLOCK_MONOTONIC, &start);
       for (int j = 0; j < 10; j++)
       {
         sector_blur_picture(&pic, sector_sizes[i]);
       }
+      clock_gettime(CLOCK_MONOTONIC, &end);
       char out[80];
       strcpy(out, sector_names[i]);
       strcat(out, ".jpg");
       save_picture_to_file(&pic, out);
-      clock_gettime(CLOCK_MONOTONIC, &end);
       adjust_time(&start, &end);
       printf("time taken: %ld.%ld\n", end.tv_sec - start.tv_sec, end.tv_nsec - start.tv_nsec);
       total += end.tv_sec - start.tv_sec + (end.tv_nsec - start.tv_nsec) / BILLION;
-      img_cmp(out);
       clear_picture(&pic);
+      img_cmp(out);
     }
     printf("----average time taken: %lf----\n", total / 3);
   }
