@@ -394,7 +394,7 @@ int main(int argc, char **argv)
       img_cmp(out);
       clear_picture(&pic);
     }
-    printf("----average time taken: %f----\n", total / 3);
+    printf("----average time taken: %lf----\n", total / 3);
   }
 
   // run each picture transformation function with different sector sizes
@@ -420,11 +420,7 @@ int main(int argc, char **argv)
       img_cmp(out);
       clear_picture(&pic);
     }
-    printf("----average time taken: %f----\n", total / 3);
+    printf("----average time taken: %lf----\n", total / 3);
   }
 
-  // choose a optimal image
-  // whether blur is obsevable
-  // recording execution times
-  // whether it is observable
 }
